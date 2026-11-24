@@ -1,0 +1,8 @@
+{
+  "name": "BASLUNE Estates — Erbil",
+  "description": "Flagship Dark Architectural Luxury trilingual real estate platform in Erbil featuring 10 curated residences, interactive 2D architectural floor plans, 3D Three.js models, 360° panoramic tours, and an AI property advisor.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
