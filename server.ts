@@ -1,4 +1,5 @@
 import express from 'express';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
@@ -9,7 +10,7 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 interface AdvisorRequestBody {
   message?: string;
@@ -43,6 +44,10 @@ Keep answers concise (2–4 sentences), helpful, accurate, and ready to guide th
 async function startServer() {
   const app = express();
   app.use(express.json({ limit: '1mb' }));
+
+  app.get('/api/health', (_req, res) => {
+    res.status(200).json({ status: 'ok' });
+  });
 
   app.post('/api/advisor', async (req, res) => {
     const body = (req.body || {}) as AdvisorRequestBody;
@@ -102,7 +107,15 @@ async function startServer() {
     }
   });
 
-  if (process.env.NODE_ENV !== 'production') {
+  const distPath = path.resolve(__dirname, 'dist');
+  const isTsxDevRunner = process.execArgv.some((arg) => arg.includes('tsx'));
+  const isProduction =
+    process.env.NODE_ENV === 'production' ||
+    process.env.npm_lifecycle_event === 'start' ||
+    Boolean(process.env.K_SERVICE) ||
+    (!isTsxDevRunner && process.env.NODE_ENV !== 'development' && fs.existsSync(path.join(distPath, 'index.html')));
+
+  if (!isProduction) {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -110,7 +123,6 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.resolve(__dirname, 'dist');
     app.use(express.static(distPath));
     app.get('*', (_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
